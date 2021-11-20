@@ -1,0 +1,4 @@
+# API Key
+apiKey: "YOUR API KEY HERE"
+# HTTP 代理
+#httpProxy: "127.0.0.1:8010"
