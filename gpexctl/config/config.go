@@ -1,7 +1,8 @@
-package gpex
+package config
 
 import (
 	"github.com/fatih/color"
+	log "github.com/golang/glog"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -15,11 +16,20 @@ var (
 	RedString    = color.New(color.FgRed).SprintFunc()
 	GreenString  = color.New(color.FgGreen).SprintFunc()
 	CyanString   = color.New(color.FgCyan).SprintFunc()
+
+	Conf *Config
 )
 
 type Config struct {
 	ApiKey    string `yaml:"apiKey"`
-	HttpProxy string `yaml:"httpProxy"`
+	HTTPProxy string `yaml:"HTTPProxy"`
+}
+
+func InitConfig() {
+	var err error
+	if Conf, err = LoadConfig("../config.yaml"); err != nil {
+		log.Errorf("%#+v", err)
+	}
 }
 
 func LoadConfig(file string) (*Config, error) {
