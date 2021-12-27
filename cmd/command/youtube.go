@@ -78,7 +78,7 @@ func searchYouTubeCmd() *cobra.Command {
 				select {
 				case customScoreList := <-ch:
 					result = append(result, customScoreList...)
-				case <-time.After(3 * time.Second):
+				case <-time.After(5 * time.Second):
 					fmt.Println("time out")
 				}
 			}

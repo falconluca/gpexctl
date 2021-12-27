@@ -9,9 +9,11 @@ import (
 	"gpex/gpexctl/config"
 	"gpex/gpexctl/xhttp"
 	"os"
+	"runtime"
 )
 
 func main() {
+	runtime.GOMAXPROCS(4)
 	config.InitConfig()
 	api.InitAPI()
 	xhttp.InitClient()
