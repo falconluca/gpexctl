@@ -64,9 +64,13 @@ func (b YouTubeBiz) CustomScoreList() []CustomScore {
 		for i := 0; i < 2; i++ {
 			select {
 			case channelsResult := <-cch:
-				numSubscribers = video.FindNumSubscribers(*channelsResult)
+				if channelsResult != nil {
+					numSubscribers = video.FindNumSubscribers(*channelsResult)
+				}
 			case videosResult := <-vch:
-				viewCount = video.FindViewCount(*videosResult)
+				if videosResult != nil {
+					viewCount = video.FindViewCount(*videosResult)
+				}
 			case <-time.After(3 * time.Second):
 				fmt.Println("fetch channel or video time out")
 			}
