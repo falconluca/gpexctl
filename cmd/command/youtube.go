@@ -56,20 +56,33 @@ func searchYouTubeCmd() *cobra.Command {
 				publishedAfter = period.Format(time.RFC3339)
 			}
 
-			var result []biz.CustomScore
+			ch := make(chan []biz.CustomScore)
 			for _, q := range flags.Terms {
-				url := api.YouTubeApi.MakeURL(api.YouTubeSearchURL, q, publishedAfter, flags.MaxResults)
-				body := xhttp.Client.HandleRequest(http.MethodGet, url, nil)
+				go func() {
+					url := api.YouTubeApi.MakeURL(api.YouTubeSearchURL, q, publishedAfter, flags.MaxResults)
+					body := xhttp.Client.HandleRequest(http.MethodGet, url, nil)
 
-				var searchResult youtube.Search
-				if err := json.Unmarshal(body, &searchResult); err != nil {
-					log.Errorf("%#+v", err)
-				}
+					var searchResult youtube.Search
+					if err := json.Unmarshal(body, &searchResult); err != nil {
+						log.Errorf("%#+v", err)
+						ch <- []biz.CustomScore{}
+					}
 
-				res := biz.NewYouTubeBizWithSearch(searchResult)
-				customScoreList := res.CustomScoreList()
-				result = append(result, customScoreList...)
+					res := biz.NewYouTubeBizWithSearch(searchResult)
+					ch <- res.CustomScoreList()
+				}()
 			}
+
+			var result []biz.CustomScore
+			for i := 0; i < len(flags.Terms); i++ {
+				select {
+				case customScoreList := <-ch:
+					result = append(result, customScoreList...)
+				case <-time.After(3 * time.Second):
+					fmt.Println("time out")
+				}
+			}
+
 			fmt.Printf("%v 🍾 共抓取视频 %v 个\n", config.Indicator, config.GreenString(len(result)))
 			sort.Slice(result, func(i, j int) bool {
 				return result[i].CustomScore > result[j].CustomScore
@@ -110,7 +123,7 @@ func printUITable(cs []biz.CustomScore) {
 
 	keywords := strings.Join(flags.Terms, ",")
 	fmt.Println("===============================")
-	fmt.Printf("关键期 '%s' 最值得播放视频\n", keywords)
+	fmt.Printf("关键词 '%s' 最值得播放视频\n", keywords)
 	fmt.Println("===============================")
 	for i, rr := range cs {
 		var customScoreString string
@@ -129,7 +142,7 @@ func printUITable(cs []biz.CustomScore) {
 func printBody(cs []biz.CustomScore) {
 	keywords := strings.Join(flags.Terms, ",")
 	fmt.Println("===============================")
-	fmt.Printf("关键期 '%s' 最值得播放视频\n", keywords)
+	fmt.Printf("关键词 '%s' 最值得播放视频\n", keywords)
 	fmt.Println("===============================")
 	for i, rr := range cs {
 		fmt.Printf("编号 #%v:\n", i+1)
